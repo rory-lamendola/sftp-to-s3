@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Repository for dw-sftp-to-s3 resources
+Parameters:
+  DockerImage:
+    Type: String
+Resources:
+    ECRRepository:
+      Type: "AWS::ECR::Repository"
+      Properties:
+          RepositoryName: "dw-sftp-to-s3"
+    Role:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: dw-sftp-to-s3
+        Path: "/"
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ecs-tasks.amazonaws.com
+            Action:
+            - sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AmazonS3FullAccess
+          - arn:aws:iam::326027360148:policy/KMSReadAndWrite
+          - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+    BatchJobDefinition:
+      Type: "AWS::Batch::JobDefinition"
+      Properties:
+        JobDefinitionName: dw-sftp-to-s3
+        Type: container
+        ContainerProperties:
+          Memory: 2048
+          Privileged: false
+          JobRoleArn: !GetAtt Role.Arn
+          Vcpus: 2
+          Image: !Ref DockerImage
+        RetryStrategy: 
+          Attempts: 1
+        
+        
+        
+    
